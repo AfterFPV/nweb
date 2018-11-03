@@ -11,7 +11,7 @@
 #define PORT        8181		/* Port number as an integer - web server default is 80 */
 #define IP_ADDRESS "127.0.0.1"	/* IP Address as a string */
 
-char *command = "GET /index.html HTTP/1.0 \r\n\r\n" ;
+char *command = "GET /example_1.json HTTP/1.0 \r\n\r\n" ;
 /* Note: spaces are delimiters and VERY important */
 
 #define BUFSIZE 8196

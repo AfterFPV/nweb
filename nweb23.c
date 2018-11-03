@@ -34,6 +34,7 @@ struct {
   {"tar", "image/tar" },
   {"htm", "text/html" },
   {"html","text/html" },
+  {"json","text/json" },
   {0,0} };
 
 void logger(int type, char *s1, char *s2, int socket_fd)
@@ -66,7 +67,7 @@ void logger(int type, char *s1, char *s2, int socket_fd)
 /* this is a child web server process, so we can exit on errors */
 void web(int fd, int hit)
 {
-  int j, file_fd, buflen;
+  int j, file_fd, converted_fd, buflen;
   long i, ret, len;
   char * fstr;
   static char buffer[BUFSIZE+1]; /* static so zero filled */
@@ -113,15 +114,19 @@ void web(int fd, int hit)
   if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) {  /* open the file for reading */
     logger(NOTFOUND, "failed to open file",&buffer[5],fd);
   }
+  if(( converted_fd = open("test.xml",O_RDWR|O_CREAT,0644)) == -1) {
+    logger(NOTFOUND, "failed to open file","test.xml",fd);
+  }
+
   logger(LOG,"SEND",&buffer[5],hit);
-  len = (long)lseek(file_fd, (off_t)0, SEEK_END); /* lseek to the file end to find the length */
-        (void)lseek(file_fd, (off_t)0, SEEK_SET); /* lseek back to the file start ready for reading */
+  len = (long)lseek(converted_fd, (off_t)0, SEEK_END); /* lseek to the file end to find the length */
+        (void)lseek(converted_fd, (off_t)0, SEEK_SET); /* lseek back to the file start ready for reading */
           (void)sprintf(buffer,"HTTP/1.1 200 OK\nServer: nweb/%d.0\nContent-Length: %ld\nConnection: close\nContent-Type: %s\n\n", VERSION, len, fstr); /* Header + a blank line */
   logger(LOG,"Header",buffer,hit);
   (void)write(fd,buffer,strlen(buffer));
 
   /* send file in 8KB block - last block may be smaller */
-  while (  (ret = read(file_fd, buffer, BUFSIZE)) > 0 ) {
+  while (  (ret = read(converted_fd, buffer, BUFSIZE)) > 0 ) {
     (void)write(fd,buffer,ret);
   }
   sleep(1);  /* allow socket to drain before signalling the socket is closed */
