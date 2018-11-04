@@ -7,6 +7,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#ifndef SIGCLD
+#   define SIGCLD SIGCHLD
+#endif
+
 /* YOU WILL HAVE TO CHANGE THESE TWO LINES  TO MATCH YOUR CONFIG */
 #define PORT        8181		/* Port number as an integer - web server default is 80 */
 #define IP_ADDRESS "127.0.0.1"	/* IP Address as a string */

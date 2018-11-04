@@ -27,8 +27,10 @@ struct {
   {"htm", "text/html" },
   {"html","text/html" },
   {"json","text/json" },
-  {"xml","text/xml" },
+  {"xml", "text/xml"  },
   {0,0} };
+
+int convert_json_to_xml(char* in, char* out);
 
 void logger(int type, char *s1, char *s2, int socket_fd)
 {
@@ -107,6 +109,8 @@ void web(int fd, int hit)
   if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) {  /* open the file for reading */
     logger(NOTFOUND, "failed to open file",&buffer[5],fd);
   }
+
+  int rv = convert_json_to_xml(&buffer[5], "test.xml");
   if(( converted_fd = open("test.xml",O_RDWR|O_CREAT,0644)) == -1) {
     logger(NOTFOUND, "failed to open file","test.xml",fd);
   }
