@@ -20,17 +20,23 @@ char *command = "GET /example_1.json HTTP/1.0 \r\n\r\n" ;
 
 #define BUFSIZE 8196
 
-pexit(char * msg)
+void pexit(char * msg)
 {
 	perror(msg);
 	exit(1);
 }
 
-main()
+void main(int argc, char *argv[])
 {
-int i,sockfd;
-char buffer[BUFSIZE];
-static struct sockaddr_in serv_addr;
+    int i,sockfd;
+    char command[512];
+    char buffer[BUFSIZE];
+    static struct sockaddr_in serv_addr;
+
+    if(argc>1)
+        sprintf(command, "GET /%s HTTP/1.0 \r\n\r\n", argv[1]);
+    else 
+        sprintf(command, "GET /example_1.json HTTP/1.0 \r\n\r\n");
 
 	printf("client trying to connect to %s and port %d\n",IP_ADDRESS,PORT);
 	if((sockfd = socket(AF_INET, SOCK_STREAM,0)) <0) 
@@ -45,7 +51,7 @@ static struct sockaddr_in serv_addr;
 		pexit("connect() failed");
 
 	/* Now the sockfd can be used to communicate to the server the GET request */
-	printf("Send bytes=%d %s\n",strlen(command), command);
+	printf("Send bytes=%d %s\n",(int)strlen(command), command);
 	write(sockfd, command, strlen(command));
 
 	/* This displays the raw HTML file (if index.html) as received by the browser */

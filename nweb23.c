@@ -109,10 +109,13 @@ void web(int fd, int hit)
   if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) {  /* open the file for reading */
     logger(NOTFOUND, "failed to open file",&buffer[5],fd);
   }
+  
+  char tmp_fname[] = "fileXXXXXX";
+  int tmp_fd = mkstemp(tmp_fname);
 
-  int rv = convert_json_to_xml(&buffer[5], "test.xml");
-  if(( converted_fd = open("test.xml",O_RDWR|O_CREAT,0644)) == -1) {
-    logger(NOTFOUND, "failed to open file","test.xml",fd);
+  int rv = convert_json_to_xml(&buffer[5], tmp_fname);
+  if(( converted_fd = open(tmp_fname,O_RDWR)) == -1) {
+    logger(NOTFOUND, "failed to open file",tmp_fname,converted_fd);
   }
 
   logger(LOG,"SEND",&buffer[5],hit);
