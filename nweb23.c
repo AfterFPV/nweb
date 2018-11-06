@@ -24,10 +24,17 @@ struct {
   char *ext;
   char *filetype;
 } extensions [] = {
+  {"gif", "image/gif" },
+  {"jpg", "image/jpg" },
+  {"jpeg","image/jpeg"},
+  {"png", "image/png" },
+  {"ico", "image/ico" },
+  {"zip", "image/zip" },
+  {"gz",  "image/gz"  },
+  {"tar", "image/tar" },
   {"htm", "text/html" },
   {"html","text/html" },
   {"json","text/json" },
-  {"xml", "text/xml"  },
   {0,0} };
 
 int convert_json_to_xml(char* in, char* out);
@@ -62,10 +69,11 @@ void logger(int type, char *s1, char *s2, int socket_fd)
 /* this is a child web server process, so we can exit on errors */
 void web(int fd, int hit)
 {
-  int j, file_fd, converted_fd, buflen;
+  int j, file_fd, converted_fd, tmp_fd, buflen, rv;
   long i, ret, len;
   char * fstr;
   static char buffer[BUFSIZE+1]; /* static so zero filled */
+  char tmp_fname[] = "tmp/fileXXXXXX";
 
   ret =read(fd,buffer,BUFSIZE);   /* read Web request in one go */
   if(ret == 0 || ret == -1) {  /* read failure stop now */
@@ -109,24 +117,31 @@ void web(int fd, int hit)
   if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) {  /* open the file for reading */
     logger(NOTFOUND, "failed to open file",&buffer[5],fd);
   }
-  
-  char tmp_fname[] = "fileXXXXXX";
-  int tmp_fd = mkstemp(tmp_fname);
 
-  int rv = convert_json_to_xml(&buffer[5], tmp_fname);
-  if(( converted_fd = open(tmp_fname,O_RDWR)) == -1) {
-    logger(NOTFOUND, "failed to open file",tmp_fname,converted_fd);
+  len = 4;
+  if( !strncmp(&buffer[buflen-len], "json", len)) {
+    if ((tmp_fd = mkstemp(tmp_fname)) < 0 ) {
+      logger(NOTFOUND, "failed to create file",tmp_fname,fd);
+    }      
+
+    rv = convert_json_to_xml(&buffer[5], tmp_fname);
+    
+    if (rv < 0) {
+      logger(ERROR, "json conversion","library call failed",0);
+    }
+    close(file_fd);
+    file_fd = tmp_fd;
   }
-
+      
   logger(LOG,"SEND",&buffer[5],hit);
-  len = (long)lseek(converted_fd, (off_t)0, SEEK_END); /* lseek to the file end to find the length */
-        (void)lseek(converted_fd, (off_t)0, SEEK_SET); /* lseek back to the file start ready for reading */
+  len = (long)lseek(file_fd, (off_t)0, SEEK_END); /* lseek to the file end to find the length */
+        (void)lseek(file_fd, (off_t)0, SEEK_SET); /* lseek back to the file start ready for reading */
           (void)sprintf(buffer,"HTTP/1.1 200 OK\nServer: nweb/%d.0\nContent-Length: %ld\nConnection: close\nContent-Type: %s\n\n", VERSION, len, fstr); /* Header + a blank line */
   logger(LOG,"Header",buffer,hit);
   (void)write(fd,buffer,strlen(buffer));
 
   /* send file in 8KB block - last block may be smaller */
-  while (  (ret = read(converted_fd, buffer, BUFSIZE)) > 0 ) {
+  while (  (ret = read(file_fd, buffer, BUFSIZE)) > 0 ) {
     (void)write(fd,buffer,ret);
   }
   sleep(1);  /* allow socket to drain before signalling the socket is closed */
