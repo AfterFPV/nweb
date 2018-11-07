@@ -120,6 +120,7 @@ void web(int fd, int hit)
 
   len = 4;
   if( !strncmp(&buffer[buflen-len], "json", len)) {
+    fstr = "text/xml";
     if ((tmp_fd = mkstemp(tmp_fname)) < 0 ) {
       logger(NOTFOUND, "failed to create file",tmp_fname,fd);
     }      
