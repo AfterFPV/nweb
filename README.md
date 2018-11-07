@@ -12,6 +12,11 @@ A web server that can read in JSON and return it as XML.
 2) ```$ ./run_server.sh```
 3) ```$ ./client```
 
+### Notes
+1) Server is setup to run on localhost 8181, If this is not available in your test env, changes will need to be made to run_server.sh and client.c
+3) Files are hosted from ./web, this directory must be readable 
+4) ./web/tmp must also be present
+
 ### References
 1) nweb - https://github.com/ankushagarwal/nweb
 2) boost - https://www.boost.org/
