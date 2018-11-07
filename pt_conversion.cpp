@@ -1,10 +1,10 @@
 #include <iostream>
 #include <fstream>
-
 #include <string>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/foreach.hpp>
 
 #ifndef SIGCLD
@@ -15,52 +15,44 @@
 using namespace std;
 using boost::property_tree::ptree;
 
-void traverse_tree(ptree &pt, string key)
+string sanitize_xml_name(string input) 
 {
-    string nkey;
-    string mykey;
-    string val;
-    ofstream myfile;
-    ptree tmp_tree;
+    string output;
 
-
-    if (!key.empty())
+    output = boost::replace_all_copy(input, "&", "&amp;");
+    boost::replace_all(output, "\'", "&apos;");
+    boost::replace_all(output, "\"", "&quot;");
+    boost::replace_all(output, "<", "&lt;");
+    boost::replace_all(output, ">'", "&gt;");
+   
+    if (!isalpha(output[0]))
     {
-        nkey = key + ".";
-    }
-    
-    for (ptree::iterator pos = pt.begin(); pos != pt.end(); ++pos)
-    {
-        mykey = pos->first;
-        if(mykey.empty()) 
-        {
-            myfile.open ("help.txt", ios::out | ios::app);
-            myfile << key << "> " << pos->first << ": " << pos->second.data() << endl;
-            //myfile << pos << " " << pos->first << ": " << pos->second.data() << endl;
-            myfile.close();
-            pt.insert(pos, make_pair("element", pos->second));
-        }
-        traverse_tree(pos->second, nkey + pos->first);
+        output[0]='a';
     }
 
-    pt.erase("");
+    return output;
 }
 
-
-string convertToXml(ptree& pt, string nodeKey) {
+string convertToXml(ptree& pt, string nodeKey)
+{
 	string xml = "";
-	string elementName = nodeKey;
+	string elementName = sanitize_xml_name(nodeKey);
+
 
 	xml = "<" + elementName + ">";
 
-	if (pt.empty()) {
+	if (pt.empty())
+    {
 		xml += pt.data();
 	}
-	else {
-		for (ptree::iterator it = pt.begin(); it != pt.end();) {
+	else 
+    {
+		for (ptree::iterator it = pt.begin(); it != pt.end();)
+        {
 			string childKey = it->first;
-			if (childKey == "") {
-				childKey = nodeKey + "_child";
+			if (childKey == "") 
+            {
+				childKey = elementName + "_child";
 			}
 
 			xml += convertToXml(it->second, childKey);
@@ -78,23 +70,26 @@ int convert_json_to_xml(char* in, char* out)
     ofstream outfile;
     int rv;
 
+    outfile.open(out);
+    
     try
     {
     	ptree pt;
 		
-		//pt.put("root","");
         read_json(in, pt);
         
-        //traverse_tree(pt, "");
-
-        outfile.open(out);
+        outfile << "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
         outfile << convertToXml(pt, "root");
+        
+        //boosts internal xml writer proved unable to reliably output valid xml 
+        //sanitize_tree(pt,"");
         //write_xml(out, pt);
 		outfile.close();
         rv = 0;
     }
     catch (std::exception const& e)
     {
+        outfile << "<err>There was a problem parsing the given JSON file, please try another</err>";
         std::cerr << e.what() << std::endl;
         rv = -1;
     }

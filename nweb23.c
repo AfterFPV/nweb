@@ -128,7 +128,7 @@ void web(int fd, int hit)
     rv = convert_json_to_xml(&buffer[5], tmp_fname);
     
     if (rv < 0) {
-      logger(ERROR, "json conversion","library call failed",0);
+      logger(LOG,"PARSE error",&buffer[5],hit);
     }
     close(file_fd);
     file_fd = tmp_fd;

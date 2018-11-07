@@ -5,6 +5,7 @@ A web server that can read in JSON and return it as XML.
 1) Boost - sudo apt-get install libboost-all-dev
 2) gcc 4.2.x+
 3) Linux/Unix or MacOS X
+4) xmllint (needed only for tests) - sudo apt install libxml2-utils
 
 ### Use
 1) ```$ make```

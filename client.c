@@ -38,7 +38,7 @@ void main(int argc, char *argv[])
     else 
         sprintf(command, "GET /example_1.json HTTP/1.0 \r\n\r\n");
 
-	printf("client trying to connect to %s and port %d\n",IP_ADDRESS,PORT);
+	//printf("client trying to connect to %s and port %d\n",IP_ADDRESS,PORT);
 	if((sockfd = socket(AF_INET, SOCK_STREAM,0)) <0) 
 		pexit("socket() failed");
 
@@ -51,7 +51,7 @@ void main(int argc, char *argv[])
 		pexit("connect() failed");
 
 	/* Now the sockfd can be used to communicate to the server the GET request */
-	printf("Send bytes=%d %s\n",(int)strlen(command), command);
+	//printf("Send bytes=%d %s\n",(int)strlen(command), command);
 	write(sockfd, command, strlen(command));
 
 	/* This displays the raw HTML file (if index.html) as received by the browser */
